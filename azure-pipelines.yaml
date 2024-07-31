@@ -51,22 +51,20 @@ stages:
         Dockerfile: '**/Dockerfile'
       displayName: 'Build and push Docker image'
 
-# - stage: Deploy
-#   dependsOn: Build
-#   jobs:
-#   - job: DeployToK8s
-#     steps:
-#     - task: Kubernetes@1
-#       inputs:
-#         connectionType: 'Kubernetes Service Connection'
-#         kubernetesServiceEndpoint: 'aks-service-connections'
-#         namespace: 'default'
-#         command: 'apply'
-#         useConfigurationFile: true
-#         configuration: 'deployment.yaml'
-#         secretType: 'dockerRegistry'
-#         containerRegistryType: 'Azure Container Registry'
-#       displayName: 'Deploy app'
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - job: DeployToK8s
+    steps:
+    - task: Kubernetes@1
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'aks-service-connections'
+        namespace: 'default'
+        command: 'apply'
+        useConfigurationFile: true
+        configuration: 'deployment.yaml'
+      displayName: 'Deploy app'
 
 - stage: Notify
   # dependsOn: Deploy
