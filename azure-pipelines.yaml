@@ -45,12 +45,10 @@ stages:
     steps:
     - task: Docker@2
       inputs:
-        containerRegistry: 'dcr-service-connections'
+        containerRegistry: 'dcr-service-connetions'
         repository: 'prueba_tecnica'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
-        tags: |
-          $(Build.BuildId)
       displayName: 'Build and push Docker image'
 
 # - stage: Deploy
