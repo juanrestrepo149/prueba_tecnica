@@ -46,7 +46,7 @@ stages:
     - task: Docker@2
       inputs:
         containerRegistry: 'dcr-service-connetions'
-        repository: 'prueba_tecnica'
+        repository: 'juanrestrepo149/prueba_tecnica'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
       displayName: 'Build and push Docker image'
