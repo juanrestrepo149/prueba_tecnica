@@ -45,16 +45,22 @@ stages:
   jobs:
   - job: Deploy
     steps:
-    - script: |
-        minikube start
-        kubectl config use-context minikube
-        kubectl apply -f k8s-deployment.yml
-      displayName: 'Deploy to Kubernetes on Minikube'
+    - task: Kubernetes@1
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'aks-service-connections'
+        namespace: 'default'
+        command: 'apply'
+        useConfigurationFile: true
+        configuration: 'deployment.yaml'
+        secretType: 'dockerRegistry'
+        containerRegistryType: 'Azure Container Registry'
+      displayName: 'Deploy app'
 
 - stage: Notify
   jobs:
   - job: Notify
     steps:
     - script: |
-        curl -X POST -H 'Content-type: application/json' --data '{"text":"Build and deployment completed successfully."}' <your_slack_webhook_url>
+        curl -X POST -H 'Content-type: application/json' --data '{"text":"Build and deployment completed successfully."}' https://hooks.slack.com/services/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
       displayName: 'Send Slack notification'
