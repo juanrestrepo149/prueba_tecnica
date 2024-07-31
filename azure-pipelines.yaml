@@ -49,6 +49,7 @@ stages:
         repository: 'juanrestrepo149/prueba_tecnica'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
+        tags: 'latest'
       displayName: 'Build and push Docker image'
 
 - stage: Deploy
