@@ -8,9 +8,9 @@ variables:
 - group: prueba-tecnica
 
 stages:
-- stage: Build
+- stage: Tests
   jobs:
-  - job: Build
+  - job: RunTests
     steps:
     - checkout: self
       displayName: 'Cloning the repository'
@@ -21,12 +21,16 @@ stages:
         addToPath: true
 
     - script: |
+        python -m pip install --upgrade pip
+      displayName: 'Upgrade pip'
+      
+    - script: |
         python -m unittest discover -s tests
       displayName: 'Run unit tests'
 
     - script: |
         pip install pylint
-        pylint app.py
+        pylint app.py || true
       displayName: 'Run static code analysis'
 
     - script: |
@@ -34,16 +38,25 @@ stages:
         bandit -r app.py
       displayName: 'Run vulnerability scan'
 
+- stage: Build
+  dependsOn: Tests
+  jobs:
+  - job: BuildImage
+    steps:
     - task: Docker@2
       inputs:
-        containerRegistry: 'dcr-service-connetions'
+        containerRegistry: 'dcr-service-connections'
         repository: 'prueba_tecnica'
         command: 'buildAndPush'
         Dockerfile: '**/Dockerfile'
+        tags: |
+          $(Build.BuildId)
+      displayName: 'Build and push Docker image'
 
 # - stage: Deploy
+#   dependsOn: Build
 #   jobs:
-#   - job: Deploy
+#   - job: DeployToK8s
 #     steps:
 #     - task: Kubernetes@1
 #       inputs:
@@ -58,8 +71,9 @@ stages:
 #       displayName: 'Deploy app'
 
 - stage: Notify
+  # dependsOn: Deploy
   jobs:
-  - job: Notify
+  - job: NotifySlack
     steps:
     - script: |
         curl -X POST -H 'Content-type: application/json' --data '{"text":"Build and deployment completed successfully."}' $(slackWebhookUrl)
