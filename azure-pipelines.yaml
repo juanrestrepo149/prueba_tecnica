@@ -36,29 +36,26 @@ stages:
 
     - task: Docker@2
       inputs:
-        containerRegistry: '$(dockerRegistryServiceConnection)'
-        repository: '$(imageRepository)'
+        containerRegistry: 'dcr-service-connetions'
+        repository: 'prueba_tecnica'
         command: 'buildAndPush'
-        Dockerfile: '$(dockerfilePath)'
-        tags: |
-          $(tag)
-      displayName: 'Build and push Docker image'
+        Dockerfile: '**/Dockerfile'
 
-- stage: Deploy
-  jobs:
-  - job: Deploy
-    steps:
-    - task: Kubernetes@1
-      inputs:
-        connectionType: 'Kubernetes Service Connection'
-        kubernetesServiceEndpoint: 'aks-service-connections'
-        namespace: 'default'
-        command: 'apply'
-        useConfigurationFile: true
-        configuration: 'deployment.yaml'
-        secretType: 'dockerRegistry'
-        containerRegistryType: 'Azure Container Registry'
-      displayName: 'Deploy app'
+# - stage: Deploy
+#   jobs:
+#   - job: Deploy
+#     steps:
+#     - task: Kubernetes@1
+#       inputs:
+#         connectionType: 'Kubernetes Service Connection'
+#         kubernetesServiceEndpoint: 'aks-service-connections'
+#         namespace: 'default'
+#         command: 'apply'
+#         useConfigurationFile: true
+#         configuration: 'deployment.yaml'
+#         secretType: 'dockerRegistry'
+#         containerRegistryType: 'Azure Container Registry'
+#       displayName: 'Deploy app'
 
 - stage: Notify
   jobs:
