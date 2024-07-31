@@ -1,19 +1,60 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - checkout: self
+      displayName: 'Cloning the repository'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+        addToPath: true
+
+    - script: |
+        python -m unittest discover -s tests
+      displayName: 'Run unit tests'
+
+    - script: |
+        pip install pylint
+        pylint app.py
+      displayName: 'Run static code analysis'
+
+    - script: |
+        pip install bandit
+        bandit -r app.py
+      displayName: 'Run vulnerability scan'
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'buildAndPush'
+        Dockerfile: '$(dockerfilePath)'
+        tags: |
+          $(tag)
+      displayName: 'Build and push Docker image'
+
+- stage: Deploy
+  jobs:
+  - job: Deploy
+    steps:
+    - script: |
+        minikube start
+        kubectl config use-context minikube
+        kubectl apply -f k8s-deployment.yml
+      displayName: 'Deploy to Kubernetes on Minikube'
+
+- stage: Notify
+  jobs:
+  - job: Notify
+    steps:
+    - script: |
+        curl -X POST -H 'Content-type: application/json' --data '{"text":"Build and deployment completed successfully."}' <your_slack_webhook_url>
+      displayName: 'Send Slack notification'
